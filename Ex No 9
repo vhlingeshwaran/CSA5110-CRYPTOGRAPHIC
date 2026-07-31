@@ -1,0 +1,79 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+char matrix[5][5];
+
+// Locate a character in the key matrix
+void findPos(char ch, int *row, int *col) {
+    if (ch == 'J')
+        ch = 'I';
+
+    for (int i = 0; i < 5; i++) {
+        for (int j = 0; j < 5; j++) {
+            if (matrix[i][j] == ch) {
+                *row = i;
+                *col = j;
+                return;
+            }
+        }
+    }
+}
+
+int main() {
+    // Playfair key: "ROYAL NEW ZEALAND NAVY"
+    char keyMatrix[5][5] = {
+        {'R','O','Y','A','L'},
+        {'N','E','W','Z','D'},
+        {'V','B','C','F','G'},
+        {'H','I','K','M','P'},
+        {'Q','S','T','U','X'}
+    };
+
+    memcpy(matrix, keyMatrix, sizeof(matrix));
+
+    char cipher[] =
+    "KXJEYUREBEZWEHEWRYTUHEYFS"
+    "KREHEGOYFIWTTTUOLKSYCAJPO"
+    "BOTEIZONTXBYBNTGONEYCUZWR"
+    "GDSONSXBOUYWRHEBAAHYUSEDQ";
+
+    int r1, c1, r2, c2;
+
+    printf("Decrypted Text:\n\n");
+
+    for (int i = 0; cipher[i] != '\0'; i += 2) {
+
+        char a = cipher[i];
+        char b = cipher[i + 1];
+
+        if (a == 'J') a = 'I';
+        if (b == 'J') b = 'I';
+
+        findPos(a, &r1, &c1);
+        findPos(b, &r2, &c2);
+
+        if (r1 == r2) {
+            // Same row
+            printf("%c%c",
+                   matrix[r1][(c1 + 4) % 5],
+                   matrix[r2][(c2 + 4) % 5]);
+        }
+        else if (c1 == c2) {
+            // Same column
+            printf("%c%c",
+                   matrix[(r1 + 4) % 5][c1],
+                   matrix[(r2 + 4) % 5][c2]);
+        }
+        else {
+            // Rectangle rule
+            printf("%c%c",
+                   matrix[r1][c2],
+                   matrix[r2][c1]);
+        }
+    }
+
+    printf("\n");
+
+    return 0;
+}
