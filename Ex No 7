@@ -1,0 +1,46 @@
+#include <stdio.h>
+
+int main() {
+    char cipher[] =
+    "53‡‡†305))6*;4826)4‡.)4‡);806*;48†8¶60))85;;]8*;:‡*8†83"
+    "(88)5*†;46(;88*96*?;8)*‡(;485);5*†2:*‡(;4956*2(5*—4)8¶8*"
+    ";4069285);)6†8)4‡‡;1(‡9;48081;8:8‡1;48†85;4)485†528806*81"
+    "(‡9;48;(88;4(‡?34;48)4‡;161;:188;‡?;";
+
+    char map[256] = {0};
+
+    // Known substitution mapping
+    map['5'] = 'A';
+    map['3'] = 'G';
+    map['‡'] = 'E';
+    map['†'] = 'T';
+    map['0'] = 'H';
+    map[')'] = 'S';
+    map['6'] = 'I';
+    map['*'] = 'N';
+    map[';'] = 'O';
+    map['4'] = 'R';
+    map['8'] = 'F';
+    map['2'] = 'L';
+    map['¶'] = 'D';
+    map['('] = 'U';
+    map['?'] = 'Y';
+    map['1'] = 'V';
+    map['9'] = 'B';
+    map[':'] = 'M';
+    map['.'] = 'P';
+    map[' '] = ' ';
+    map[']'] = 'C';
+    map['—'] = 'W';
+
+    printf("Decrypted Message:\n\n");
+
+    for (int i = 0; cipher[i] != '\0'; i++) {
+        if (map[(unsigned char)cipher[i]] != 0)
+            printf("%c", map[(unsigned char)cipher[i]]);
+        else
+            printf("%c", cipher[i]);
+    }
+
+    return 0;
+}
