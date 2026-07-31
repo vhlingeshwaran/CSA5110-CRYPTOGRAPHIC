@@ -1,0 +1,89 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+char matrix[5][5] = {
+    {'M','F','H','I','K'},
+    {'U','N','O','P','Q'},
+    {'Z','V','W','X','Y'},
+    {'E','L','A','R','G'},
+    {'D','S','T','B','C'}
+};
+
+// Find the position of a character in the matrix
+void findPos(char ch, int *row, int *col) {
+    if (ch == 'J')
+        ch = 'I';
+
+    for (int i = 0; i < 5; i++) {
+        for (int j = 0; j < 5; j++) {
+            if (matrix[i][j] == ch) {
+                *row = i;
+                *col = j;
+                return;
+            }
+        }
+    }
+}
+
+int main() {
+    char text[200], plain[200];
+    int i, j = 0;
+
+    printf("Enter plaintext: ");
+    fgets(text, sizeof(text), stdin);
+
+    // Remove spaces and punctuation, convert to uppercase
+    for (i = 0; text[i] != '\0'; i++) {
+        if (isalpha(text[i])) {
+            plain[j++] = toupper(text[i]);
+        }
+    }
+    plain[j] = '\0';
+
+    // Insert X between repeated letters
+    char temp[200];
+    int k = 0;
+
+    for (i = 0; plain[i] != '\0'; i++) {
+        temp[k++] = plain[i];
+        if (plain[i] == plain[i + 1]) {
+            temp[k++] = 'X';
+        }
+    }
+
+    if (k % 2 != 0)
+        temp[k++] = 'X';
+
+    temp[k] = '\0';
+
+    printf("\nPrepared Text: %s\n", temp);
+    printf("Ciphertext: ");
+
+    for (i = 0; i < k; i += 2) {
+        int r1, c1, r2, c2;
+
+        findPos(temp[i], &r1, &c1);
+        findPos(temp[i + 1], &r2, &c2);
+
+        if (r1 == r2) {
+            printf("%c%c",
+                   matrix[r1][(c1 + 1) % 5],
+                   matrix[r2][(c2 + 1) % 5]);
+        }
+        else if (c1 == c2) {
+            printf("%c%c",
+                   matrix[(r1 + 1) % 5][c1],
+                   matrix[(r2 + 1) % 5][c2]);
+        }
+        else {
+            printf("%c%c",
+                   matrix[r1][c2],
+                   matrix[r2][c1]);
+        }
+    }
+
+    printf("\n");
+
+    return 0;
+}
