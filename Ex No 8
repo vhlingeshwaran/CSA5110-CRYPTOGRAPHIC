@@ -1,0 +1,32 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+int main() {
+    char plain[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    char cipher[] = "CIPHERABDFGJKLMNOQSTUVWXYZ";
+    char text[100];
+    int i;
+
+    printf("Keyword : CIPHER\n");
+    printf("Cipher Alphabet : %s\n\n", cipher);
+
+    printf("Enter Plaintext: ");
+    fgets(text, sizeof(text), stdin);
+
+    printf("Ciphertext: ");
+
+    for (i = 0; text[i] != '\0'; i++) {
+        if (isupper(text[i])) {
+            printf("%c", cipher[text[i] - 'A']);
+        }
+        else if (islower(text[i])) {
+            printf("%c", tolower(cipher[text[i] - 'a']));
+        }
+        else {
+            printf("%c", text[i]);   // Preserve spaces and punctuation
+        }
+    }
+
+    return 0;
+}
