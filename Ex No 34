@@ -1,0 +1,242 @@
+# Q34: ECB, CBC and CFB modes
+#
+# Educational implementation using a toy 8-bit block cipher.
+# The purpose is to demonstrate the modes and padding.
+
+BLOCK_SIZE = 8
+MASK = 0xFF
+
+
+def encrypt_block(block, key):
+    return ((block ^ key) + 0x3D) & MASK
+
+
+def decrypt_block(block, key):
+    return ((block - 0x3D) & MASK) ^ key
+
+
+def xor_bytes(a, b):
+    return bytes(x ^ y for x, y in zip(a, b))
+
+
+# ------------------------------------------------
+# Padding
+# ------------------------------------------------
+
+def pad(data):
+    """
+    Add 1000... padding.
+
+    Always adds padding, even if data is already
+    a complete number of blocks.
+    """
+
+    padding_length = BLOCK_SIZE - (len(data) % BLOCK_SIZE)
+
+    if padding_length == 0:
+        padding_length = BLOCK_SIZE
+
+    return data + bytes(
+        [0x80] + [0] * (padding_length - 1)
+    )
+
+
+def unpad(data):
+    """Remove 1000... padding."""
+
+    i = len(data) - 1
+
+    while i >= 0 and data[i] == 0:
+        i -= 1
+
+    if i < 0 or data[i] != 0x80:
+        raise ValueError("Invalid padding")
+
+    return data[:i]
+
+
+# ------------------------------------------------
+# ECB
+# ------------------------------------------------
+
+def ecb_encrypt(data, key):
+    result = bytearray()
+
+    for i in range(0, len(data), BLOCK_SIZE):
+
+        block = int.from_bytes(
+            data[i:i + BLOCK_SIZE],
+            "big"
+        )
+
+        encrypted = encrypt_block(block, key)
+
+        result += encrypted.to_bytes(
+            BLOCK_SIZE,
+            "big"
+        )
+
+    return bytes(result)
+
+
+def ecb_decrypt(data, key):
+    result = bytearray()
+
+    for i in range(0, len(data), BLOCK_SIZE):
+
+        block = int.from_bytes(
+            data[i:i + BLOCK_SIZE],
+            "big"
+        )
+
+        decrypted = decrypt_block(block, key)
+
+        result += decrypted.to_bytes(
+            BLOCK_SIZE,
+            "big"
+        )
+
+    return bytes(result)
+
+
+# ------------------------------------------------
+# CBC
+# ------------------------------------------------
+
+def cbc_encrypt(data, key, iv):
+    result = bytearray()
+
+    previous = iv
+
+    for i in range(0, len(data), BLOCK_SIZE):
+
+        block = data[i:i + BLOCK_SIZE]
+
+        xored = xor_bytes(block, previous)
+
+        encrypted = encrypt_block(
+            int.from_bytes(xored, "big"),
+            key
+        )
+
+        cipher_block = encrypted.to_bytes(
+            BLOCK_SIZE,
+            "big"
+        )
+
+        result += cipher_block
+
+        previous = cipher_block
+
+    return bytes(result)
+
+
+def cbc_decrypt(data, key, iv):
+    result = bytearray()
+
+    previous = iv
+
+    for i in range(0, len(data), BLOCK_SIZE):
+
+        cipher_block = data[i:i + BLOCK_SIZE]
+
+        decrypted = decrypt_block(
+            int.from_bytes(cipher_block, "big"),
+            key
+        ).to_bytes(BLOCK_SIZE, "big")
+
+        plaintext = xor_bytes(
+            decrypted,
+            previous
+        )
+
+        result += plaintext
+
+        previous = cipher_block
+
+    return bytes(result)
+
+
+# ------------------------------------------------
+# CFB
+# ------------------------------------------------
+
+def cfb_encrypt(data, key, iv):
+    result = bytearray()
+
+    feedback = iv
+
+    for i in range(0, len(data), BLOCK_SIZE):
+
+        block = data[i:i + BLOCK_SIZE]
+
+        keystream = encrypt_block(
+            int.from_bytes(feedback, "big"),
+            key
+        ).to_bytes(BLOCK_SIZE, "big")
+
+        cipher_block = xor_bytes(
+            block,
+            keystream
+        )
+
+        result += cipher_block
+
+        feedback = cipher_block
+
+    return bytes(result)
+
+
+def cfb_decrypt(data, key, iv):
+    result = bytearray()
+
+    feedback = iv
+
+    for i in range(0, len(data), BLOCK_SIZE):
+
+        cipher_block = data[i:i + BLOCK_SIZE]
+
+        keystream = encrypt_block(
+            int.from_bytes(feedback, "big"),
+            key
+        ).to_bytes(BLOCK_SIZE, "big")
+
+        plaintext = xor_bytes(
+            cipher_block,
+            keystream
+        )
+
+        result += plaintext
+
+        feedback = cipher_block
+
+    return bytes(result)
+
+
+# ------------------------------------------------
+# Test
+# ------------------------------------------------
+
+plaintext = b"HELLO WORLD"
+key = 0x5A
+iv = bytes([0xAA])
+
+padded = pad(plaintext)
+
+print("Original:", plaintext)
+print("Padded  :", padded)
+
+# ECB
+cipher = ecb_encrypt(padded, key)
+plain = unpad(ecb_decrypt(cipher, key))
+print("\nECB:", plain)
+
+# CBC
+cipher = cbc_encrypt(padded, key, iv)
+plain = unpad(cbc_decrypt(cipher, key, iv))
+print("CBC:", plain)
+
+# CFB
+cipher = cfb_encrypt(padded, key, iv)
+plain = unpad(cfb_decrypt(cipher, key, iv))
+print("CFB:", plain)
