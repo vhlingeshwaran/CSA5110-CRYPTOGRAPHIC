@@ -1,0 +1,51 @@
+# Q18: DES Subkey Generation
+# 24 bits come from the 28-bit C half
+# 24 bits come from the 28-bit D half
+
+# Standard DES PC-2 table
+PC2 = [
+    14, 17, 11, 24, 1, 5,
+    3, 28, 15, 6, 21, 10,
+    23, 19, 12, 4, 26, 8,
+    16, 7, 27, 20, 13, 2,
+    41, 52, 31, 37, 47, 55,
+    30, 40, 51, 45, 33, 48,
+    44, 49, 39, 56, 34, 53,
+    46, 42, 50, 36, 29, 32
+]
+
+
+def permute(value, table, input_bits):
+    result = 0
+
+    for position in table:
+        bit = (value >> (input_bits - position)) & 1
+        result = (result << 1) | bit
+
+    return result
+
+
+def generate_subkey(C, D):
+    combined = (C << 28) | D
+
+    subkey = permute(combined, PC2, 56)
+
+    return subkey
+
+
+print("DES 24 + 24 BIT SUBKEY GENERATION")
+print("----------------------------------")
+
+C = int(input("Enter 28-bit C value in hexadecimal: "), 16)
+D = int(input("Enter 28-bit D value in hexadecimal: "), 16)
+
+C &= 0x0FFFFFFF
+D &= 0x0FFFFFFF
+
+subkey = generate_subkey(C, D)
+
+print("\nC (28 bits): {:07X}".format(C))
+print("D (28 bits): {:07X}".format(D))
+
+print("\n24 bits selected from C and D using PC-2.")
+print("48-bit DES subkey: {:012X}".format(subkey))
