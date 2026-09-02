@@ -1,0 +1,66 @@
+# Q26: RSA key replacement demonstration
+
+from math import gcd
+
+
+def extended_gcd(a, b):
+    if b == 0:
+        return b, 1, 0
+
+    g, x1, y1 = extended_gcd(b, a % b)
+
+    x = y1
+    y = x1 - (a // b) * y1
+
+    return g, x, y
+
+
+def mod_inverse(a, m):
+    g, x, _ = extended_gcd(a, m)
+
+    if g != 1:
+        raise ValueError("Inverse does not exist")
+
+    return x % m
+
+
+# Bob's original RSA parameters
+p = 61
+q = 53
+n = p * q
+
+phi = (p - 1) * (q - 1)
+
+# Old key
+old_e = 17
+old_d = mod_inverse(old_e, phi)
+
+print("Original RSA key")
+print("n =", n)
+print("e =", old_e)
+print("d =", old_d)
+
+# Bob generates a NEW exponent but keeps SAME n
+new_e = 7
+new_d = mod_inverse(new_e, phi)
+
+print("\nNew key using same modulus")
+print("n =", n)
+print("e =", new_e)
+print("d =", new_d)
+
+# Correct approach:
+# Generate completely new p and q
+new_p = 71
+new_q = 67
+
+new_n = new_p * new_q
+new_phi = (new_p - 1) * (new_q - 1)
+
+new_public_e = 17
+new_private_d = mod_inverse(new_public_e, new_phi)
+
+print("\nCorrect new RSA key pair")
+print("n =", new_n)
+print("e =", new_public_e)
+print("d =", new_private_d)
