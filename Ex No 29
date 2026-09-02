@@ -1,0 +1,52 @@
+# Q29: SHA-3 / Keccak state calculation
+#
+# State size = 1600 bits
+# Lane size  = 64 bits
+# Rate       = 1024 bits
+# Capacity   = 576 bits
+#
+# Permutation is deliberately ignored as requested.
+
+STATE_BITS = 1600
+LANE_BITS = 64
+RATE_BITS = 1024
+
+TOTAL_LANES = STATE_BITS // LANE_BITS
+RATE_LANES = RATE_BITS // LANE_BITS
+CAPACITY_LANES = TOTAL_LANES - RATE_LANES
+
+print("Total lanes    :", TOTAL_LANES)
+print("Rate lanes     :", RATE_LANES)
+print("Capacity lanes :", CAPACITY_LANES)
+
+# Initial state
+state = [0] * TOTAL_LANES
+
+# P0 has at least one nonzero bit in every
+# lane of the rate portion.
+P0 = [0] * TOTAL_LANES
+
+for i in range(RATE_LANES):
+    P0[i] = 1
+
+# Absorb P0
+for i in range(RATE_LANES):
+    state[i] ^= P0[i]
+
+print("\nState after absorbing P0:")
+print(state)
+
+# Check capacity lanes
+capacity_nonzero = any(
+    state[i] != 0
+    for i in range(RATE_LANES, TOTAL_LANES)
+)
+
+if capacity_nonzero:
+    print("\nCapacity contains a nonzero bit.")
+else:
+    print("\nAll capacity lanes are still zero.")
+
+print("\nWithout permutation:")
+print("Capacity lanes will remain zero forever.")
+print("Time required = infinite / never")
