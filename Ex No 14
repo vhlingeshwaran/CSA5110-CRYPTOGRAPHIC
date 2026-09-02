@@ -1,0 +1,97 @@
+# One-Time Pad (Vigenere Cipher)
+# A = 0, B = 1, ..., Z = 25
+
+def text_to_numbers(text):
+    return [ord(c) - ord('a') for c in text.lower() if c.isalpha()]
+
+
+def numbers_to_text(numbers):
+    return ''.join(chr(n + ord('a')) for n in numbers)
+
+
+# ---------------------------------------------------------
+# Part (a): Encrypt "send more money"
+# ---------------------------------------------------------
+
+plaintext = "send more money"
+
+# Given key stream
+key = [9, 0, 1, 7, 23, 15, 21, 14, 11, 11, 2, 8, 9]
+
+# Remove spaces
+plain_text = ''.join(c for c in plaintext.lower() if c.isalpha())
+
+plain_numbers = text_to_numbers(plain_text)
+
+print("PART (a): ENCRYPTION")
+print("--------------------")
+print("Plaintext:", plain_text)
+print("Key:", key)
+
+cipher_numbers = []
+
+for i in range(len(plain_numbers)):
+    c = (plain_numbers[i] + key[i]) % 26
+    cipher_numbers.append(c)
+
+    print(
+        f"{plain_text[i]} ({plain_numbers[i]}) + "
+        f"{key[i]} = {c} -> {chr(c + ord('a'))}"
+    )
+
+ciphertext = numbers_to_text(cipher_numbers)
+
+print("\nCiphertext:", ciphertext)
+
+
+# ---------------------------------------------------------
+# Part (b): Find key for "cash not needed"
+# ---------------------------------------------------------
+
+new_plaintext = "cash not needed"
+
+new_plain_text = ''.join(
+    c for c in new_plaintext.lower() if c.isalpha()
+)
+
+new_plain_numbers = text_to_numbers(new_plain_text)
+
+# Calculate key:
+# K = (C - P) mod 26
+
+new_key = []
+
+for i in range(len(cipher_numbers)):
+    k = (cipher_numbers[i] - new_plain_numbers[i]) % 26
+    new_key.append(k)
+
+print("\nPART (b): FINDING THE KEY")
+print("------------------------")
+print("Ciphertext:", ciphertext)
+print("Desired plaintext:", new_plain_text)
+
+print("\nCalculated key stream:")
+
+for i in range(len(cipher_numbers)):
+    print(
+        f"C={cipher_numbers[i]} - "
+        f"P={new_plain_numbers[i]} "
+        f"= {new_key[i]} mod 26"
+    )
+
+print("\nNew key:", new_key)
+
+
+# ---------------------------------------------------------
+# Verify decryption
+# ---------------------------------------------------------
+
+decrypted_numbers = []
+
+for i in range(len(cipher_numbers)):
+    p = (cipher_numbers[i] - new_key[i]) % 26
+    decrypted_numbers.append(p)
+
+decrypted_text = numbers_to_text(decrypted_numbers)
+
+print("\nDecrypted plaintext:", decrypted_text)
