@@ -1,0 +1,77 @@
+# Q31: CMAC Subkey Generation
+# Demonstrates CMAC subkey generation for
+# 64-bit and 128-bit block sizes.
+
+def left_shift_one(block, block_size):
+    """Left shift a block by one bit."""
+
+    mask = (1 << block_size) - 1
+
+    return (block << 1) & mask
+
+
+def generate_subkey(L, block_size):
+    """
+    Generate K1 and K2.
+
+    L = E(K, 0^n)
+    """
+
+    if block_size == 64:
+        Rb = 0x1B
+
+    elif block_size == 128:
+        Rb = 0x87
+
+    else:
+        raise ValueError("Block size must be 64 or 128 bits")
+
+    mask = (1 << block_size) - 1
+
+    # Generate K1
+    msb = (L >> (block_size - 1)) & 1
+
+    K1 = left_shift_one(L, block_size)
+
+    if msb:
+        K1 ^= Rb
+
+    # Generate K2 from K1
+    msb = (K1 >> (block_size - 1)) & 1
+
+    K2 = left_shift_one(K1, block_size)
+
+    if msb:
+        K2 ^= Rb
+
+    return K1, K2
+
+
+# ------------------------------------------------
+# Example for 64-bit block size
+# ------------------------------------------------
+
+L64 = 0x1234567890ABCDEF
+
+K1, K2 = generate_subkey(L64, 64)
+
+print("64-bit block")
+print("------------")
+print("L  =", f"{L64:016X}")
+print("K1 =", f"{K1:016X}")
+print("K2 =", f"{K2:016X}")
+
+
+# ------------------------------------------------
+# Example for 128-bit block size
+# ------------------------------------------------
+
+L128 = 0x1234567890ABCDEF1234567890ABCDEF
+
+K1, K2 = generate_subkey(L128, 128)
+
+print("\n128-bit block")
+print("-------------")
+print("L  =", f"{L128:032X}")
+print("K1 =", f"{K1:032X}")
+print("K2 =", f"{K2:032X}")
