@@ -1,0 +1,41 @@
+import math
+
+# Playfair cipher uses a 5 x 5 matrix
+# (I and J are normally combined)
+n = 25
+
+# ---------------------------------------------------
+# Part (a): Number of possible keys
+# ---------------------------------------------------
+
+# Each of the 25 letters can be arranged in 25! ways
+possible_keys = math.factorial(n)
+
+# Convert to approximate power of 2
+power_a = math.log2(possible_keys)
+
+print("Part (a)")
+print("Number of possible keys =", possible_keys)
+print("Approximate power of 2 = 2^%.2f" % power_a)
+
+
+# ---------------------------------------------------
+# Part (b): Effectively unique keys
+# ---------------------------------------------------
+
+# Cyclically shifting rows and columns produces
+# equivalent Playfair keys.
+#
+# 5 possible row shifts × 5 possible column shifts
+# = 25 equivalent keys.
+
+equivalent_keys = 5 * 5
+
+unique_keys = possible_keys // equivalent_keys
+
+# Convert to approximate power of 2
+power_b = math.log2(unique_keys)
+
+print("\nPart (b)")
+print("Effectively unique keys =", unique_keys)
+print("Approximate power of 2 = 2^%.2f" % power_b)
