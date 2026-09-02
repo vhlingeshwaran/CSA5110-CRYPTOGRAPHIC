@@ -1,0 +1,102 @@
+# Q30: CBC-MAC forgery demonstration
+#
+# This is a toy implementation for understanding
+# the CBC-MAC vulnerability.
+#
+# DO NOT use this implementation for real security.
+
+BLOCK_SIZE = 8
+MASK = 0xFF
+
+
+def encrypt_block(block, key):
+    """
+    Simple reversible toy block cipher.
+    """
+    return ((block ^ key) + 0x37) & MASK
+
+
+def cbc_mac(message, key):
+    """
+    CBC-MAC with IV = 0.
+    Message must contain complete blocks.
+    """
+
+    if len(message) % BLOCK_SIZE != 0:
+        raise ValueError("Message must contain complete blocks")
+
+    previous = 0
+
+    for i in range(0, len(message), BLOCK_SIZE):
+
+        block = int.from_bytes(
+            message[i:i + BLOCK_SIZE],
+            "big"
+        )
+
+        previous = encrypt_block(
+            block ^ previous,
+            key
+        )
+
+    return previous
+
+
+# -----------------------------------------
+# Original one-block message
+# -----------------------------------------
+
+key = 0x5A
+
+X = bytes.fromhex("1234567890ABCDEF")
+
+# Calculate MAC of X
+T = cbc_mac(X, key)
+
+print("Original message X:")
+print(X.hex())
+
+print("\nMAC T:")
+print(f"{T:016X}")
+
+
+# -----------------------------------------
+# Construct forged message
+# X || (X XOR T)
+# -----------------------------------------
+
+T_bytes = T.to_bytes(BLOCK_SIZE, "big")
+
+second_block = bytes(
+    a ^ b
+    for a, b in zip(X, T_bytes)
+)
+
+forged_message = X + second_block
+
+print("\nSecond block X XOR T:")
+print(second_block.hex())
+
+print("\nForged message:")
+print(forged_message.hex())
+
+
+# -----------------------------------------
+# Calculate MAC of forged message
+# -----------------------------------------
+
+forged_mac = cbc_mac(forged_message, key)
+
+print("\nMAC of forged message:")
+print(f"{forged_mac:016X}")
+
+
+# -----------------------------------------
+# Verify forgery
+# -----------------------------------------
+
+if forged_mac == T:
+    print("\nForgery successful!")
+    print("MAC(X || (X XOR T)) == MAC(X)")
+else:
+    print("\nForgery failed.")
