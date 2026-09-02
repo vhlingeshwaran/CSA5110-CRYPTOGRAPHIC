@@ -1,0 +1,56 @@
+# RSA Private Key Calculation
+# Public key: e = 31, n = 3599
+
+# Extended Euclidean Algorithm
+def extended_gcd(a, b):
+    if b == 0:
+        return a, 1, 0
+
+    gcd, x1, y1 = extended_gcd(b, a % b)
+
+    x = y1
+    y = x1 - (a // b) * y1
+
+    return gcd, x, y
+
+
+# Find modular inverse
+def mod_inverse(a, m):
+    gcd, x, y = extended_gcd(a, m)
+
+    if gcd != 1:
+        return None
+
+    return x % m
+
+
+# Given public key
+e = 31
+n = 3599
+
+# Step 1: Find p and q by trial division
+p = None
+q = None
+
+for i in range(2, int(n ** 0.5) + 1):
+    if n % i == 0:
+        p = i
+        q = n // i
+        break
+
+print("p =", p)
+print("q =", q)
+
+# Step 2: Calculate phi(n)
+phi = (p - 1) * (q - 1)
+
+print("phi(n) =", phi)
+
+# Step 3: Find d = e^-1 mod phi(n)
+d = mod_inverse(e, phi)
+
+print("d =", d)
+
+# Display keys
+print("\nPublic Key  =", (e, n))
+print("Private Key =", (d, n))
