@@ -1,0 +1,69 @@
+# Q27: Attack on RSA when each character
+# is encrypted separately.
+
+# Public RSA key
+n = 3599
+e = 31
+
+alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
+def rsa_encrypt(m, e, n):
+    return pow(m, e, n)
+
+
+# -----------------------------------------
+# Attacker creates a lookup table
+# -----------------------------------------
+
+lookup_table = {}
+
+for number in range(26):
+    ciphertext = rsa_encrypt(number, e, n)
+    lookup_table[ciphertext] = alphabet[number]
+
+print("RSA lookup table:")
+print("-----------------")
+
+for number in range(26):
+    ciphertext = rsa_encrypt(number, e, n)
+    print(
+        alphabet[number],
+        "->",
+        number,
+        "->",
+        ciphertext
+    )
+
+
+# -----------------------------------------
+# Suppose attacker intercepts ciphertext
+# -----------------------------------------
+
+message = "HELLO"
+
+ciphertext = []
+
+for ch in message:
+    m = alphabet.index(ch)
+    c = rsa_encrypt(m, e, n)
+    ciphertext.append(c)
+
+print("\nOriginal message:")
+print(message)
+
+print("\nCiphertext:")
+print(ciphertext)
+
+
+# -----------------------------------------
+# Recover message using lookup table
+# -----------------------------------------
+
+recovered = ""
+
+for c in ciphertext:
+    recovered += lookup_table[c]
+
+print("\nRecovered message:")
+print(recovered)
