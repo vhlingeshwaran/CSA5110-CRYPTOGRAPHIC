@@ -1,0 +1,116 @@
+# Q35: One-Time Pad version of Vigenere Cipher
+
+import secrets
+
+
+ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
+def text_to_numbers(text):
+    return [
+        ALPHABET.index(ch)
+        for ch in text.upper()
+        if ch.isalpha()
+    ]
+
+
+def numbers_to_text(numbers):
+    return ''.join(
+        ALPHABET[n]
+        for n in numbers
+    )
+
+
+# ------------------------------------------------
+# Generate random key
+# ------------------------------------------------
+
+def generate_key(length):
+    """
+    Generate cryptographically random values
+    from 0 to 25.
+    """
+
+    return [
+        secrets.randbelow(26)
+        for _ in range(length)
+    ]
+
+
+# ------------------------------------------------
+# Encryption
+# ------------------------------------------------
+
+def encrypt(plaintext, key):
+    plaintext_numbers = text_to_numbers(plaintext)
+
+    if len(plaintext_numbers) != len(key):
+        raise ValueError(
+            "Key must have same length as plaintext"
+        )
+
+    ciphertext = []
+
+    for p, k in zip(plaintext_numbers, key):
+
+        c = (p + k) % 26
+
+        ciphertext.append(c)
+
+    return numbers_to_text(ciphertext)
+
+
+# ------------------------------------------------
+# Decryption
+# ------------------------------------------------
+
+def decrypt(ciphertext, key):
+
+    ciphertext_numbers = text_to_numbers(ciphertext)
+
+    if len(ciphertext_numbers) != len(key):
+        raise ValueError(
+            "Key must have same length as ciphertext"
+        )
+
+    plaintext = []
+
+    for c, k in zip(ciphertext_numbers, key):
+
+        p = (c - k) % 26
+
+        plaintext.append(p)
+
+    return numbers_to_text(plaintext)
+
+
+# ------------------------------------------------
+# Example
+# ------------------------------------------------
+
+plaintext = "HELLOWORLD"
+
+# Generate a random key
+key = generate_key(len(plaintext))
+
+print("Plaintext:")
+print(plaintext)
+
+print("\nKey:")
+print(key)
+
+# Encrypt
+ciphertext = encrypt(plaintext, key)
+
+print("\nCiphertext:")
+print(ciphertext)
+
+# Decrypt
+decrypted = decrypt(ciphertext, key)
+
+print("\nDecrypted:")
+print(decrypted)
+
+assert decrypted == plaintext
+
+print("\nEncryption/decryption successful!")
