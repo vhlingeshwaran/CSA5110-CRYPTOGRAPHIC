@@ -1,0 +1,165 @@
+# Q23: S-DES in Counter (CTR) Mode
+
+# S-DES tables
+
+P10 = [3,5,2,7,4,10,1,9,8,6]
+P8 = [6,3,7,4,8,5,10,9]
+
+IP = [2,6,3,1,4,8,5,7]
+IP_INV = [4,1,3,5,7,2,8,6]
+
+EP = [4,1,2,3,2,3,4,1]
+P4 = [2,4,3,1]
+
+S0 = [
+    [1,0,3,2],
+    [3,2,1,0],
+    [0,2,1,3],
+    [3,1,3,2]
+]
+
+S1 = [
+    [0,1,2,3],
+    [2,0,1,3],
+    [3,0,1,0],
+    [2,1,0,3]
+]
+
+
+def permute(bits, table):
+    return [bits[i-1] for i in table]
+
+
+def left_shift(bits, n):
+    return bits[n:] + bits[:n]
+
+
+def xor(a, b):
+    return [x ^ y for x, y in zip(a, b)]
+
+
+def generate_keys(key):
+    p10 = permute(key, P10)
+
+    left = p10[:5]
+    right = p10[5:]
+
+    left = left_shift(left, 1)
+    right = left_shift(right, 1)
+
+    k1 = permute(left + right, P8)
+
+    left = left_shift(left, 2)
+    right = left_shift(right, 2)
+
+    k2 = permute(left + right, P8)
+
+    return k1, k2
+
+
+def sbox(bits, box):
+    row = bits[0] * 2 + bits[3]
+    col = bits[1] * 2 + bits[2]
+
+    value = box[row][col]
+
+    return [value // 2, value % 2]
+
+
+def fk(bits, key):
+    left = bits[:4]
+    right = bits[4:]
+
+    expanded = permute(right, EP)
+    temp = xor(expanded, key)
+
+    result = sbox(temp[:4], S0) + sbox(temp[4:], S1)
+
+    result = permute(result, P4)
+
+    return xor(left, result) + right
+
+
+def sdes_encrypt(block, k1, k2):
+    bits = permute(block, IP)
+
+    bits = fk(bits, k1)
+    bits = bits[4:] + bits[:4]
+    bits = fk(bits, k2)
+
+    return permute(bits, IP_INV)
+
+
+def bits_to_string(bits):
+    return ''.join(map(str, bits))
+
+
+def string_to_bits(s):
+    return [int(x) for x in s]
+
+
+print("S-DES COUNTER MODE")
+print("------------------")
+
+key_string = input("Enter 10-bit key: ")
+counter_string = input("Enter starting counter (8 bits): ")
+plaintext_string = input("Enter 24-bit plaintext: ")
+
+key = string_to_bits(key_string)
+counter = int(counter_string, 2)
+plaintext = string_to_bits(plaintext_string)
+
+k1, k2 = generate_keys(key)
+
+ciphertext = []
+
+for i in range(0, len(plaintext), 8):
+
+    block = plaintext[i:i+8]
+
+    # Convert counter to 8 bits
+    counter_bits = [
+        int(x) for x in format(counter, "08b")
+    ]
+
+    # Encrypt counter
+    keystream = sdes_encrypt(counter_bits, k1, k2)
+
+    # XOR with plaintext
+    encrypted = xor(block, keystream)
+
+    ciphertext.extend(encrypted)
+
+    counter += 1
+
+
+print("\nCiphertext:")
+print(bits_to_string(ciphertext))
+
+
+# --------------------------------------------------
+# CTR decryption
+# --------------------------------------------------
+
+counter = int(counter_string, 2)
+decrypted = []
+
+for i in range(0, len(ciphertext), 8):
+
+    block = ciphertext[i:i+8]
+
+    counter_bits = [
+        int(x) for x in format(counter, "08b")
+    ]
+
+    keystream = sdes_encrypt(counter_bits, k1, k2)
+
+    original = xor(block, keystream)
+
+    decrypted.extend(original)
+
+    counter += 1
+
+
+print("\nDecrypted plaintext:")
+print(bits_to_string(decrypted))
