@@ -1,0 +1,146 @@
+# Automatic Letter Frequency Attack on Additive (Caesar) Cipher
+# A = 0, B = 1, ..., Z = 25
+
+# English letter frequencies
+ENGLISH_FREQ = {
+    'a': 0.0812,
+    'b': 0.0149,
+    'c': 0.0271,
+    'd': 0.0432,
+    'e': 0.1202,
+    'f': 0.0230,
+    'g': 0.0203,
+    'h': 0.0592,
+    'i': 0.0731,
+    'j': 0.0010,
+    'k': 0.0069,
+    'l': 0.0398,
+    'm': 0.0261,
+    'n': 0.0695,
+    'o': 0.0768,
+    'p': 0.0182,
+    'q': 0.0011,
+    'r': 0.0602,
+    's': 0.0628,
+    't': 0.0910,
+    'u': 0.0288,
+    'v': 0.0111,
+    'w': 0.0209,
+    'x': 0.0017,
+    'y': 0.0211,
+    'z': 0.0007
+}
+
+
+# ---------------------------------------------------------
+# Decrypt using an additive cipher key
+# ---------------------------------------------------------
+
+def decrypt(ciphertext, key):
+    plaintext = ""
+
+    for char in ciphertext:
+        if char.isalpha():
+            # Convert A-Z to 0-25
+            value = ord(char.lower()) - ord('a')
+
+            # Decryption: P = (C - K) mod 26
+            decrypted = (value - key) % 26
+
+            plaintext += chr(decrypted + ord('a'))
+        else:
+            # Preserve spaces and punctuation
+            plaintext += char
+
+    return plaintext
+
+
+# ---------------------------------------------------------
+# Calculate frequency score
+# ---------------------------------------------------------
+
+def frequency_score(text):
+    letters = [c for c in text.lower() if c.isalpha()]
+
+    if not letters:
+        return float('-inf')
+
+    # Count letters
+    counts = {}
+
+    for letter in letters:
+        counts[letter] = counts.get(letter, 0) + 1
+
+    total = len(letters)
+
+    # Chi-square test
+    score = 0
+
+    for letter in ENGLISH_FREQ:
+        expected = ENGLISH_FREQ[letter] * total
+        observed = counts.get(letter, 0)
+
+        if expected > 0:
+            score += ((observed - expected) ** 2) / expected
+
+    # Smaller chi-square = more likely English
+    return score
+
+
+# ---------------------------------------------------------
+# Letter frequency attack
+# ---------------------------------------------------------
+
+def frequency_attack(ciphertext, top_n):
+    results = []
+
+    # Try all 26 possible additive cipher keys
+    for key in range(26):
+
+        plaintext = decrypt(ciphertext, key)
+        score = frequency_score(plaintext)
+
+        results.append((score, key, plaintext))
+
+    # Sort by score
+    # Lower chi-square score = more likely English
+    results.sort(key=lambda x: x[0])
+
+    return results[:top_n]
+
+
+# ---------------------------------------------------------
+# Main program
+# ---------------------------------------------------------
+
+print("==============================================")
+print(" AUTOMATIC ADDITIVE CIPHER FREQUENCY ATTACK")
+print("==============================================")
+
+ciphertext = input("\nEnter ciphertext: ")
+
+top_n = int(input("How many possible plaintexts? "))
+
+# Make sure top_n is between 1 and 26
+if top_n < 1:
+    top_n = 1
+
+if top_n > 26:
+    top_n = 26
+
+results = frequency_attack(ciphertext, top_n)
+
+
+# ---------------------------------------------------------
+# Display results
+# ---------------------------------------------------------
+
+print("\nTOP", top_n, "POSSIBLE PLAINTEXTS")
+print("=" * 60)
+
+for rank, (score, key, plaintext) in enumerate(results, start=1):
+
+    print("\nRank:", rank)
+    print("Key:", key)
+    print("Score:", round(score, 3))
+    print("Plaintext:", plaintext)
