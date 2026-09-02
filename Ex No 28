@@ -1,0 +1,52 @@
+# Q28: Diffie-Hellman demonstration
+
+q = 23
+a = 5
+
+# Alice's secret
+x = 6
+
+# Bob's secret
+y = 15
+
+# -----------------------------------------
+# Correct Diffie-Hellman
+# -----------------------------------------
+
+alice_public = pow(a, x, q)
+bob_public = pow(a, y, q)
+
+alice_key = pow(bob_public, x, q)
+bob_key = pow(alice_public, y, q)
+
+print("Correct Diffie-Hellman")
+print("---------------------")
+print("Alice sends:", alice_public)
+print("Bob sends  :", bob_public)
+
+print("Alice key:", alice_key)
+print("Bob key  :", bob_key)
+
+assert alice_key == bob_key
+
+
+# -----------------------------------------
+# Incorrect method: x^a and y^a
+# -----------------------------------------
+
+alice_wrong = pow(x, a, q)
+bob_wrong = pow(y, a, q)
+
+alice_wrong_key = pow(bob_wrong, x, q)
+bob_wrong_key = pow(alice_wrong, y, q)
+
+print("\nUsing x^a and y^a")
+print("-----------------")
+print("Alice sends:", alice_wrong)
+print("Bob sends  :", bob_wrong)
+
+print("Alice result:", alice_wrong_key)
+print("Bob result  :", bob_wrong_key)
+
+if alice_wrong_key != bob_wrong_key:
+    print("They do NOT obtain the same key.")
