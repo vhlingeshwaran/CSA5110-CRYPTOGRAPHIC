@@ -1,0 +1,55 @@
+# Q17: DES Decryption Key Schedule
+# Demonstrates reversing the 16 DES subkeys
+
+# DES left-shift schedule
+SHIFT_SCHEDULE = [
+    1, 1, 2, 2, 2, 2, 2, 2,
+    1, 2, 2, 2, 2, 2, 2, 1
+]
+
+
+def left_rotate(value, shifts):
+    return ((value << shifts) | (value >> (28 - shifts))) & 0x0FFFFFFF
+
+
+def generate_subkeys(key56):
+    """
+    key56 is represented as two 28-bit halves.
+    This program demonstrates the DES key-generation schedule.
+    """
+
+    C = (key56 >> 28) & 0x0FFFFFFF
+    D = key56 & 0x0FFFFFFF
+
+    subkeys = []
+
+    for i, shift in enumerate(SHIFT_SCHEDULE, 1):
+        C = left_rotate(C, shift)
+        D = left_rotate(D, shift)
+
+        # Combine C and D.
+        # In complete DES, PC-2 is applied here.
+        combined = (C << 28) | D
+
+        subkeys.append(combined)
+
+    return subkeys
+
+
+print("DES DECRYPTION KEY SCHEDULE")
+print("---------------------------")
+
+key = int(input("Enter a 56-bit DES key in hexadecimal: "), 16)
+
+subkeys = generate_subkeys(key)
+
+print("\nEncryption subkeys:")
+for i, k in enumerate(subkeys, 1):
+    print("K{:2d} = {:014X}".format(i, k))
+
+print("\nDecryption subkeys:")
+for i, k in enumerate(reversed(subkeys), 1):
+    print("K{:2d} = {:014X}".format(17 - i, k))
+
+print("\nDecryption order:")
+print("K16, K15, K14, ..., K2, K1")
