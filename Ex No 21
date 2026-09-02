@@ -1,0 +1,61 @@
+# Q21: Padding demonstration for ECB, CBC and CFB
+# Padding method:
+# Add 1 bit followed by enough 0 bits.
+# Here we demonstrate it using bytes:
+# 0x80 followed by 0x00 bytes.
+
+BLOCK_SIZE = 8
+
+
+def add_padding(data):
+    # Always add padding, even if data is
+    # already a complete block.
+    padding_length = BLOCK_SIZE - (len(data) % BLOCK_SIZE)
+
+    # If already complete, padding_length = BLOCK_SIZE
+    padding = bytes([0x80]) + bytes(padding_length - 1)
+
+    return data + padding
+
+
+def remove_padding(data):
+    # Find the last 0x80 byte
+    index = data.rfind(b'\x80')
+
+    if index == -1:
+        raise ValueError("Invalid padding")
+
+    # Everything after 0x80 must be zero
+    if any(b != 0 for b in data[index + 1:]):
+        raise ValueError("Invalid padding")
+
+    return data[:index]
+
+
+print("PADDING FOR ECB, CBC AND CFB")
+print("----------------------------")
+
+message = input("Enter plaintext: ")
+
+data = message.encode()
+
+print("\nOriginal length:", len(data), "bytes")
+
+padded = add_padding(data)
+
+print("Padded length:", len(padded), "bytes")
+print("Padded data:", padded)
+
+print("\nPadding bytes:")
+print(padded[len(data):].hex())
+
+# Demonstrate removal
+original = remove_padding(padded)
+
+print("\nAfter removing padding:")
+print(original.decode())
+
+print("\nMotivation:")
+print("A padding block is always added so that")
+print("the receiver can unambiguously determine")
+print("where the real plaintext ends.")
