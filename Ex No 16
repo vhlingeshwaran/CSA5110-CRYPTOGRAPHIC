@@ -1,0 +1,139 @@
+# Q16: Frequency Attack on Monoalphabetic Substitution Cipher
+
+import random
+import math
+import string
+
+# Common English letter frequencies
+english_freq = "etaoinshrdlucmfwypvbgkjqxz"
+
+# Common English words used for additional scoring
+common_words = [
+    "the", "and", "that", "this", "have", "with",
+    "from", "they", "will", "you", "are", "for",
+    "not", "but", "was", "all", "can", "one",
+    "there", "their", "what", "when", "where"
+]
+
+
+def decrypt(ciphertext, key):
+    result = ""
+
+    for ch in ciphertext:
+        if ch.isalpha():
+            result += key.get(ch.lower(), ch)
+        else:
+            result += ch
+
+    return result
+
+
+def score(text):
+    text = text.lower()
+    s = 0
+
+    # Reward common English words
+    words = text.split()
+
+    for word in words:
+        clean = ''.join(c for c in word if c.isalpha())
+
+        if clean in common_words:
+            s += len(clean) * 10
+
+    # Reward common letter pairs
+    common_pairs = [
+        "th", "he", "in", "er", "an",
+        "re", "on", "at", "en", "nd"
+    ]
+
+    for pair in common_pairs:
+        s += text.count(pair) * 2
+
+    return s
+
+
+def make_key():
+    shuffled = list(string.ascii_lowercase)
+    random.shuffle(shuffled)
+
+    return dict(zip(string.ascii_lowercase, shuffled))
+
+
+def mutate_key(key):
+    new_key = key.copy()
+
+    a, b = random.sample(string.ascii_lowercase, 2)
+
+    new_key[a], new_key[b] = new_key[b], new_key[a]
+
+    return new_key
+
+
+def attack(ciphertext, iterations=20000):
+    best_key = None
+    best_score = float('-inf')
+    best_plaintext = ""
+
+    for restart in range(10):
+
+        key = make_key()
+        current_plaintext = decrypt(ciphertext, key)
+        current_score = score(current_plaintext)
+
+        temperature = 10.0
+
+        for _ in range(iterations // 10):
+
+            new_key = mutate_key(key)
+            new_plaintext = decrypt(ciphertext, new_key)
+            new_score = score(new_plaintext)
+
+            if new_score > current_score:
+                key = new_key
+                current_score = new_score
+
+            else:
+                probability = math.exp(
+                    (new_score - current_score) / temperature
+                )
+
+                if random.random() < probability:
+                    key = new_key
+                    current_score = new_score
+
+            temperature *= 0.9998
+
+        plaintext = decrypt(ciphertext, key)
+
+        if current_score > best_score:
+            best_score = current_score
+            best_key = key
+            best_plaintext = plaintext
+
+    return best_score, best_key, best_plaintext
+
+
+print("MONOALPHABETIC SUBSTITUTION ATTACK")
+print("----------------------------------")
+
+ciphertext = input("Enter ciphertext: ")
+top_n = int(input("Enter number of possible plaintexts: "))
+
+print("\nAttacking... Please wait.")
+
+results = []
+
+for i in range(top_n):
+    s, key, plaintext = attack(ciphertext)
+
+    results.append((s, plaintext))
+
+results.sort(reverse=True)
+
+print("\nPossible plaintexts:")
+
+for i, (s, plaintext) in enumerate(results, 1):
+    print("\nRank:", i)
+    print("Score:", round(s, 2))
+    print("Plaintext:", plaintext)
