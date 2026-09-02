@@ -1,0 +1,263 @@
+# Hill Cipher - Known Plaintext Attack
+# A = 0, B = 1, ..., Z = 25
+
+MOD = 26
+
+
+# Find modular inverse
+def mod_inverse(a, m):
+    for i in range(1, m):
+        if (a * i) % m == 1:
+            return i
+    return None
+
+
+# Matrix inverse for a 2x2 matrix
+def matrix_inverse(matrix):
+    a, b = matrix[0]
+    c, d = matrix[1]
+
+    determinant = (a * d - b * c) % MOD
+    inverse_det = mod_inverse(determinant, MOD)
+
+    if inverse_det is None:
+        return None
+
+    return [
+        [(d * inverse_det) % MOD,
+         (-b * inverse_det) % MOD],
+        [(-c * inverse_det) % MOD,
+         (a * inverse_det) % MOD]
+    ]
+
+
+# Matrix multiplication
+def multiply(A, B):
+    return [
+        [
+            (A[0][0] * B[0][0] + A[0][1] * B[1][0]) % MOD,
+            (A[0][0] * B[0][1] + A[0][1] * B[1][1]) % MOD
+        ],
+        [
+            (A[1][0] * B[0][0] + A[1][1] * B[1][0]) % MOD,
+            (A[1][0] * B[0][1] + A[1][1] * B[1][1]) % MOD
+        ]
+    ]
+
+
+# Convert letters to numbers
+def text_to_numbers(text):
+    return [ord(c.lower()) - ord('a') for c in text if c.isalpha()]
+
+
+# --------------------------------------------------
+# INPUT
+# --------------------------------------------------
+
+print("HILL CIPHER - KNOWN PLAINTEXT ATTACK")
+print("--------------------------------------")
+
+p1 = input("Enter plaintext block 1 (2 letters): ")
+p2 = input("Enter plaintext block 2 (2 letters): ")
+
+c1 = input("Enter ciphertext block 1 (2 letters): ")
+c2 = input("Enter ciphertext block 2 (2 letters): ")
+
+
+# Convert to numbers
+P1 = text_to_numbers(p1)
+P2 = text_to_numbers(p2)
+
+C1 = text_to_numbers(c1)
+C2 = text_to_numbers(c2)
+
+
+# Check input
+if len(P1) != 2 or len(P2) != 2:
+    print("Error: Plaintext blocks must contain exactly 2 letters.")
+    exit()
+
+if len(C1) != 2 or len(C2) != 2:
+    print("Error: Ciphertext blocks must contain exactly 2 letters.")
+    exit()
+
+
+# --------------------------------------------------
+# Construct plaintext and ciphertext matrices
+# --------------------------------------------------
+
+# Columns are plaintext/ciphertext vectors
+P = [
+    [P1[0], P2[0]],
+    [P1[1], P2[1]]
+]
+
+C = [
+    [C1[0], C2[0]],
+    [C1[1], C2[1]]
+]
+
+
+print("\nPlaintext matrix P:")
+for row in P:
+    print(row)
+
+print("\nCiphertext matrix C:")
+for row in C:
+    print(row)
+
+
+# --------------------------------------------------
+# Recover key
+#
+# C = K P
+#
+# Therefore:
+#
+# K = C P^-1
+# --------------------------------------------------
+
+P_inverse = matrix_inverse(P)
+
+if P_inverse is None:
+    print("\nCannot recover key.")
+    print("The plaintext matrix is not invertible modulo 26.")
+    exit()
+
+
+print("\nInverse of P:")
+for row in P_inverse:
+    print(row)
+
+
+K = multiply(C, P_inverse)
+
+print("\nRecovered Hill Cipher Key K:")
+for row in K:
+    print(row)
+
+
+# --------------------------------------------------
+# Verify the recovered key
+# --------------------------------------------------
+
+print("\nVerification:")
+
+result1 = [
+    (K[0][0] * P1[0] + K[0][1] * P1[1]) % MOD,
+    (K[1][0] * P1[0] + K[1][1] * P1[1]) % MOD
+]
+
+result2 = [
+    (K[0][0] * P2[0] + K[0][1] * P2[1]) % MOD,
+    (K[1][0] * P2[0] + K[1][1] * P2[1]) % MOD
+]
+
+print("P1 -> C1:", result1)
+print("P2 -> C2:", result2)
+
+print("\nAttack successful!")
+:::
+
+## Input example
+
+Use this example:
+
+```text
+Enter plaintext block 1 (2 letters): hi
+Enter plaintext block 2 (2 letters): at
+Enter ciphertext block 1 (2 letters): tc
+Enter ciphertext block 2 (2 letters): qw
+
+
+Here the hidden key is:
+
+𝐾
+=
+(
+9
+	
+4
+
+
+5
+	
+7
+)
+
+because:
+
+Plaintext blocks
+
+Using A=0:
+
+HI = (7, 8)
+AT = (0, 19)
+
+
+So:
+
+𝑃
+=
+(
+7
+	
+0
+
+
+8
+	
+19
+)
+
+Ciphertext blocks
+TC = (19, 2)
+QW = (16, 22)
+
+
+Therefore:
+
+𝐶
+=
+(
+19
+	
+16
+
+
+2
+	
+22
+)
+
+The attack calculates:
+
+𝐾
+=
+𝐶
+𝑃
+−
+1
+(
+m
+o
+d
+26
+)
+
+and recovers:
+
+𝐾
+=
+(
+9
+	
+4
+
+
+5
+	
+7
+)
+
+So the program demonstrates that given enough plaintext–ciphertext pairs, the secret Hill-cipher key can be recovered.
