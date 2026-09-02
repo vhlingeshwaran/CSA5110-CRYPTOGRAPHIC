@@ -1,0 +1,73 @@
+# Q32: DSA signature randomness demonstration
+#
+# Educational example only.
+# Real DSA uses very large parameters.
+
+from hashlib import sha256
+
+
+# Small DSA-like parameters for demonstration
+p = 809
+q = 101
+
+# Find a generator g of order q
+g = 256
+
+# Private key
+x = 37
+
+# Public key
+y = pow(g, x, p)
+
+
+def hash_message(message):
+    return int.from_bytes(
+        sha256(message.encode()).digest(),
+        "big"
+    )
+
+
+def dsa_sign(message, k):
+    """
+    Generate a DSA signature using a supplied k.
+    """
+
+    H = hash_message(message)
+
+    r = pow(g, k, p) % q
+
+    k_inverse = pow(k, -1, q)
+
+    s = (k_inverse * (H + x * r)) % q
+
+    return r, s
+
+
+message = "HELLO"
+
+# Sign the SAME message with two different k values
+k1 = 17
+k2 = 29
+
+signature1 = dsa_sign(message, k1)
+signature2 = dsa_sign(message, k2)
+
+print("Message:")
+print(message)
+
+print("\nPrivate key:")
+print(x)
+
+print("\nPublic key:")
+print(y)
+
+print("\nFirst signature:")
+print(signature1)
+
+print("\nSecond signature:")
+print(signature2)
+
+if signature1 != signature2:
+    print("\nThe signatures are different.")
+else:
+    print("\nThe signatures are the same.")
