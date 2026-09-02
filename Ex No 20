@@ -1,0 +1,146 @@
+# Q20: CBC Error Propagation Demonstration
+
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
+
+
+key = b"1234567890123456"
+iv = b"abcdefghijklmnop"
+
+plaintext = (
+    "Block one data!"
+    "Block two data!"
+    "Block three data"
+)
+
+print("CBC ERROR PROPAGATION")
+print("---------------------")
+
+print("Original plaintext:")
+print(plaintext)
+
+
+# ---------------------------------------------------------
+# Encryption
+# ---------------------------------------------------------
+
+cipher = AES.new(key, AES.MODE_CBC, iv)
+
+ciphertext = cipher.encrypt(
+    pad(plaintext.encode(), AES.block_size)
+)
+
+print("\nOriginal ciphertext:")
+print(ciphertext.hex())
+
+
+# ---------------------------------------------------------
+# Introduce an error into C1
+# ---------------------------------------------------------
+
+corrupted = bytearray(ciphertext)
+
+# Flip one bit in the first ciphertext block
+corrupted[0] ^= 1
+
+print("\nOne bit changed in C1.")
+
+
+# ---------------------------------------------------------
+# Decryption of corrupted ciphertext
+# ---------------------------------------------------------
+
+decipher = AES.new(key, AES.MODE_CBC, iv)
+
+decrypted = decipher.decrypt(bytes(corrupted))
+
+print("\nDecrypted data after C1 error:")
+
+# Display blocks separately
+for i in range(0, len(decrypted), 16):
+    block = decrypted[i:i + 16]
+
+    print(
+        "Block",
+        (i // 16) + 1,
+        ":",
+        block
+    )
+
+
+# ---------------------------------------------------------
+# Explanation
+# ---------------------------------------------------------
+
+print("\nERROR PROPAGATION:")
+print("------------------")
+print("P1 : Completely corrupted")
+print("P2 : One corresponding bit is changed")
+print("P3+: Not affected")
+
+print("\nAnswer to (a):")
+print("No blocks beyond P2 are affected.")
+
+print("\nAnswer to (b):")
+print("If P1 has a bit error before CBC encryption,")
+print("the error affects C1 and causes:")
+print("P1 -> corrupted during decryption")
+print("P2 -> corresponding bit error")
+print("P3 onward -> correct")
+:::
+:::
+
+### Sample input
+
+```text
+No keyboard input is required.
+
+
+The plaintext used by the program is:
+
+Block one data!
+Block two data!
+Block three data
+
+Answers
+
+20(a): Are blocks beyond P2 affected?
+
+No.
+
+If C1 contains an error:
+
+C1 error
+   ↓
+P1 → corrupted
+P2 → one-bit error
+P3 → correct
+P4 → correct
+...
+
+
+20(b): If P1 has a bit error?
+
+The error propagates through C1, causing:
+
+P1 → corrupted
+P2 → corresponding bit error
+P3 onward → correct
+
+
+So the important CBC error-propagation rule is:
+
+𝐶
+𝑖
+ error
+→
+𝑃
+𝑖
+ corrupted completely, 
+𝑃
+𝑖
++
+1
+ has a bit error
+
+and then the error stops.
