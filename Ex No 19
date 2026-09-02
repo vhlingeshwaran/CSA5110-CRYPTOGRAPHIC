@@ -1,0 +1,42 @@
+# Q19: 3DES in CBC Mode
+
+from Crypto.Cipher import DES3
+from Crypto.Util.Padding import pad, unpad
+
+
+print("3DES CBC MODE")
+print("-------------")
+
+plaintext = input("Enter plaintext: ")
+
+# 3DES requires a 16-byte or 24-byte key.
+key = b"0123456789ABCDEF01234567"
+
+# DES block size = 8 bytes
+iv = b"12345678"
+
+# Encryption
+cipher = DES3.new(key, DES3.MODE_CBC, iv)
+
+ciphertext = cipher.encrypt(
+    pad(plaintext.encode(), DES3.block_size)
+)
+
+print("\nCiphertext (hex):")
+print(ciphertext.hex())
+
+# Decryption
+decipher = DES3.new(key, DES3.MODE_CBC, iv)
+
+decrypted = unpad(
+    decipher.decrypt(ciphertext),
+    DES3.block_size
+).decode()
+
+print("\nDecrypted plaintext:")
+print(decrypted)
+
+print("\nComparison:")
+print("Security  : 3DES is stronger than single DES.")
+print("Performance: 3DES is slower than DES.")
+print("Modern choice: AES is preferred today.")
