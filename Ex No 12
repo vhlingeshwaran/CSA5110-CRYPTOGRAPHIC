@@ -1,0 +1,178 @@
+import math
+
+MOD = 26
+
+# Hill Cipher key matrix
+K = [
+    [9, 4],
+    [5, 7]
+]
+
+# Original plaintext
+plaintext = "meet me at the usual place at ten rather than eight oclock"
+
+
+# ---------------------------------------------------------
+# Convert text to numbers
+# A = 0, B = 1, ..., Z = 25
+# ---------------------------------------------------------
+def text_to_numbers(text):
+    return [ord(c) - ord('a') for c in text]
+
+
+def numbers_to_text(numbers):
+    return ''.join(chr(n + ord('a')) for n in numbers)
+
+
+# ---------------------------------------------------------
+# Prepare plaintext
+# ---------------------------------------------------------
+text = ''.join(c for c in plaintext.lower() if c.isalpha())
+
+# Add X if the number of characters is odd
+if len(text) % 2 != 0:
+    text += 'x'
+
+print("Plaintext:")
+print(text)
+
+print("\nPlaintext pairs:")
+for i in range(0, len(text), 2):
+    print(text[i:i+2], end=" ")
+print()
+
+
+# ---------------------------------------------------------
+# Encryption
+# ---------------------------------------------------------
+def encrypt(text, key):
+    numbers = text_to_numbers(text)
+    cipher_numbers = []
+
+    print("\nENCRYPTION CALCULATIONS")
+    print("-" * 50)
+
+    for i in range(0, len(numbers), 2):
+        x1 = numbers[i]
+        x2 = numbers[i + 1]
+
+        # Matrix multiplication:
+        # y1 = 9*x1 + 4*x2
+        # y2 = 5*x1 + 7*x2
+        y1 = (key[0][0] * x1 + key[0][1] * x2) % MOD
+        y2 = (key[1][0] * x1 + key[1][1] * x2) % MOD
+
+        cipher_numbers.extend([y1, y2])
+
+        pair = text[i:i+2]
+        encrypted_pair = numbers_to_text([y1, y2])
+
+        print(
+            f"{pair} -> ({x1},{x2}) -> "
+            f"({y1},{y2}) -> {encrypted_pair}"
+        )
+
+    return numbers_to_text(cipher_numbers)
+
+
+ciphertext = encrypt(text, K)
+
+print("\nCiphertext:")
+print(ciphertext)
+
+
+# ---------------------------------------------------------
+# Find modular inverse
+# ---------------------------------------------------------
+def mod_inverse(a, m):
+    for i in range(1, m):
+        if (a * i) % m == 1:
+            return i
+    return None
+
+
+# ---------------------------------------------------------
+# Calculate inverse matrix
+# ---------------------------------------------------------
+a = K[0][0]
+b = K[0][1]
+c = K[1][0]
+d = K[1][1]
+
+det = (a * d - b * c) % MOD
+det_inverse = mod_inverse(det, MOD)
+
+print("\nDECRYPTION")
+print("-" * 50)
+
+print("Determinant =", a * d - b * c)
+print("Determinant mod 26 =", det)
+print("Inverse of determinant mod 26 =", det_inverse)
+
+# Inverse of:
+# [a b]
+# [c d]
+#
+# is:
+# det_inverse * [ d  -b]
+#                [-c  a]
+#
+# mod 26
+
+K_inv = [
+    [(det_inverse * d) % MOD,
+     (det_inverse * (-b)) % MOD],
+
+    [(det_inverse * (-c)) % MOD,
+     (det_inverse * a) % MOD]
+]
+
+print("\nInverse key matrix:")
+print(K_inv[0])
+print(K_inv[1])
+
+
+# ---------------------------------------------------------
+# Decryption
+# ---------------------------------------------------------
+def decrypt(ciphertext, key_inv):
+    numbers = text_to_numbers(ciphertext)
+    plain_numbers = []
+
+    print("\nDECRYPTION CALCULATIONS")
+    print("-" * 50)
+
+    for i in range(0, len(numbers), 2):
+        x1 = numbers[i]
+        x2 = numbers[i + 1]
+
+        y1 = (key_inv[0][0] * x1 +
+              key_inv[0][1] * x2) % MOD
+
+        y2 = (key_inv[1][0] * x1 +
+              key_inv[1][1] * x2) % MOD
+
+        plain_numbers.extend([y1, y2])
+
+        pair = ciphertext[i:i+2]
+        decrypted_pair = numbers_to_text([y1, y2])
+
+        print(
+            f"{pair} -> ({x1},{x2}) -> "
+            f"({y1},{y2}) -> {decrypted_pair}"
+        )
+
+    return numbers_to_text(plain_numbers)
+
+
+decrypted_text = decrypt(ciphertext, K_inv)
+
+print("\nRecovered plaintext:")
+print(decrypted_text)
+
+# Remove the padding X
+if decrypted_text.endswith('x'):
+    decrypted_text = decrypted_text[:-1]
+
+print("\nOriginal message:")
+print(decrypted_text)
