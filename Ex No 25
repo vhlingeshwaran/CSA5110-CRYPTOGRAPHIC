@@ -1,0 +1,86 @@
+# RSA Common Factor Attack
+# Q25
+
+from math import gcd
+
+
+# RSA encryption
+def rsa_encrypt(m, e, n):
+    return pow(m, e, n)
+
+
+# Given RSA public key
+n = 3599
+e = 31
+
+# We assume the attacker does NOT know p and q.
+
+# Plaintext blocks
+# 59 is deliberately included because:
+# gcd(59, 3599) = 59
+plaintext_blocks = [12, 25, 59, 100, 200]
+
+# Encrypt the blocks
+ciphertext_blocks = []
+
+for m in plaintext_blocks:
+    c = rsa_encrypt(m, e, n)
+    ciphertext_blocks.append(c)
+
+print("Public key:")
+print("e =", e)
+print("n =", n)
+
+print("\nPlaintext blocks:")
+print(plaintext_blocks)
+
+print("\nCiphertext blocks:")
+print(ciphertext_blocks)
+
+
+# -----------------------------------------
+# Find a factor of n using GCD
+# -----------------------------------------
+
+print("\nChecking GCD of ciphertext blocks with n:")
+
+factor = None
+
+for c in ciphertext_blocks:
+
+    g = gcd(c, n)
+
+    print("gcd(", c, ",", n, ") =", g)
+
+    if 1 < g < n:
+        factor = g
+        break
+
+
+# -----------------------------------------
+# If a factor is found
+# -----------------------------------------
+
+if factor is not None:
+
+    p = factor
+    q = n // p
+
+    print("\nFactor found!")
+    print("p =", p)
+    print("q =", q)
+
+    # Calculate Euler's phi
+    phi = (p - 1) * (q - 1)
+
+    print("phi(n) =", phi)
+
+    # Calculate private exponent
+    d = pow(e, -1, phi)
+
+    print("Private exponent d =", d)
+
+    print("Private key =", (d, n))
+
+else:
+    print("\nNo factor of n was found.")
